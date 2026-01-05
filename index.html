@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SirkelScope Pro - Ultimate WhatsApp Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --bg-dark: #050505;
+            --emerald: #10b981;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-dark);
+            color: #e2e8f0;
+            font-size: clamp(0.875rem, 1vw + 0.5rem, 1.125rem);
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: transform 0.3s ease, border 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .hide-section { display: none !important; }
+
+        .range-container {
+            position: relative;
+            height: 40px;
+            margin-top: 10px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            position: absolute;
+            width: 100%;
+            background: none;
+            pointer-events: none;
+            z-index: 20;
+            height: 40px;
+            margin: 0;
+            top: 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: var(--emerald);
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+            border: 3px solid #050505;
+            position: relative;
+            z-index: 30;
+        }
+
+        .slider-track {
+            position: absolute;
+            width: 100%;
+            height: 6px;
+            background: #1e293b;
+            border-radius: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        .slider-highlight {
+            position: absolute;
+            height: 6px;
+            background: var(--emerald);
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+            gap: 1.5rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade { animation: fadeIn 0.5s ease forwards; }
+
+        #help-modal {
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+        }
+    </style>
+</head>
+<body class="selection:bg-emerald-500/30 overflow-x-hidden">
+
+    <nav class="sticky top-0 z-50 bg-[#050505]/90 backdrop-blur-xl border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-tr from-emerald-600 to-teal-400 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <i data-lucide="trending-up" class="text-black w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-black tracking-tighter text-white leading-none uppercase">SirkelScope</h1>
+                    <span class="text-[9px] text-emerald-500 font-bold tracking-[0.25em]">PRO AI EDITION</span>
+                </div>
+            </div>
+            <div id="nav-actions" class="hidden flex items-center gap-2 sm:gap-4">
+                <label class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-black px-4 sm:px-6 py-2.5 rounded-full cursor-pointer transition-all font-bold text-xs sm:text-sm">
+                    <i data-lucide="file-text" class="w-4 h-4"></i> <span>Ganti File</span>
+                    <input type="file" id="file-input-nav" class="hidden" accept=".txt">
+                </label>
+            </div>
+        </div>
+    </nav>
+
+    <main id="capture-area" class="container-p max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-8">
+        
+        <section id="upload-section" class="flex flex-col items-center justify-center py-20 text-center animate-fade">
+            <div class="relative mb-8">
+                <div class="absolute inset-0 bg-emerald-500 blur-[80px] opacity-20"></div>
+                <div class="relative w-24 h-24 bg-slate-900 rounded-[2.5rem] flex items-center justify-center border border-slate-800 shadow-2xl">
+                    <i data-lucide="sparkles" class="text-emerald-500 w-12 h-12"></i>
+                </div>
+            </div>
+            <h2 class="text-4xl sm:text-7xl font-black text-white tracking-tighter mb-6 leading-[0.95]">Analisis Sirkel<br><span class="text-emerald-500">Lebih Cerdas.</span></h2>
+            <div class="flex flex-col items-center gap-6">
+                <label class="bg-emerald-500 text-black px-12 py-5 rounded-full cursor-pointer font-black hover:scale-105 transition-all text-lg sm:text-xl shadow-2xl shadow-emerald-500/40">
+                    UPLOAD CHAT (.TXT)
+                    <input type="file" id="file-input-hero" class="hidden" accept=".txt">
+                </label>
+                <button onclick="toggleHelp()" class="text-slate-500 text-sm font-bold flex items-center gap-2 hover:text-white transition-colors">
+                    <i data-lucide="help-circle" class="w-4 h-4"></i> Cara Ekspor Chat WhatsApp
+                </button>
+            </div>
+        </section>
+
+        <section id="dashboard-section" class="hide-section space-y-8 sm:space-y-12">
+            <!-- Timeline & Stats Section (UI dipertahankan seperti sebelumnya) -->
+            <div class="flex flex-col gap-8 glass-card p-6 sm:p-8 rounded-[2.5rem] animate-fade">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div class="space-y-1">
+                        <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Timeline Sirkel</h2>
+                        <p id="date-range-info" class="text-emerald-500 font-bold text-sm">Pilih rentang waktu untuk dianalisis</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="filter" class="text-slate-500 w-4 h-4"></i>
+                        <select id="member-filter" class="bg-slate-800 text-white px-4 py-2 rounded-xl focus:outline-none font-bold text-xs border border-white/5">
+                            <option value="all">Semua Anggota</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="relative px-2">
+                    <div class="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">
+                        <span id="slider-start-label">-</span>
+                        <span id="slider-end-label">-</span>
+                    </div>
+                    <div class="range-container">
+                        <div class="slider-track"></div>
+                        <div id="slider-highlight" class="slider-highlight"></div>
+                        <input type="range" id="range-start" min="0" max="100" value="0">
+                        <input type="range" id="range-end" min="0" max="100" value="100">
+                    </div>
+                    <p class="text-center text-[10px] text-slate-500 font-bold italic uppercase tracking-tighter mt-4">Geser kedua titik untuk menentukan rentang waktu spesifik</p>
+                </div>
+            </div>
+
+            <!-- ENHANCED AI DEEP ANALYSIS -->
+            <div class="glass-card bg-emerald-500/5 border-emerald-500/20 p-6 sm:p-8 rounded-[2.5rem] animate-fade">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 bg-emerald-500 rounded-xl shadow-lg shadow-emerald-500/20">
+                            <i data-lucide="brain-circuit" class="text-black w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-2xl font-black text-white uppercase tracking-tight">Advanced AI Analytics</h3>
+                    </div>
+                    <span class="px-3 py-1 bg-emerald-500/20 text-emerald-500 text-[10px] font-black rounded-full border border-emerald-500/30">TOP 5 TOPICS INCLUDED</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="p-5 bg-white/5 rounded-3xl border border-white/5">
+                        <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-3">Grup Vibe Check</p>
+                        <p id="ai-vibe" class="text-white font-bold text-lg leading-tight mb-2">Analyzing...</p>
+                        <p id="ai-vibe-desc" class="text-slate-500 text-xs">Menunggu data...</p>
+                    </div>
+                    <div class="p-5 bg-white/5 rounded-3xl border border-white/5">
+                        <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-3">Top 5 Trending Topics</p>
+                        <div id="ai-topic-cloud" class="flex flex-col gap-2">
+                            <!-- Tags with progress bars go here -->
+                        </div>
+                    </div>
+                    <div class="p-5 bg-white/5 rounded-3xl border border-white/5">
+                        <p class="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-3">Group Health</p>
+                        <p id="ai-health" class="text-white font-bold text-lg leading-tight mb-2">Analyzing...</p>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div id="ai-health-bar" class="bg-rose-500 h-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="p-5 bg-white/5 rounded-3xl border border-white/5">
+                        <p class="text-[10px] font-black text-purple-500 uppercase tracking-widest mb-3">AI Deep Summary</p>
+                        <p id="ai-summary" class="text-white text-xs font-medium leading-relaxed italic">"..."</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats & Leaderboard (Lanjutkan UI sebelumnya) -->
+            <div class="grid-layout">
+                <div class="glass-card p-6 rounded-[2rem]">
+                    <i data-lucide="message-square" class="text-emerald-500 mb-6 w-8 h-8"></i>
+                    <h3 class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Total Pesan</h3>
+                    <p id="stat-total-chat" class="text-3xl font-black text-white">0</p>
+                </div>
+                <div class="glass-card p-6 rounded-[2rem]">
+                    <i data-lucide="zap" class="text-blue-500 mb-6 w-8 h-8"></i>
+                    <h3 class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Kosa Kata Unik</h3>
+                    <p id="stat-words" class="text-3xl font-black text-white">0</p>
+                </div>
+                <div class="glass-card p-6 rounded-[2rem]">
+                    <i data-lucide="activity" class="text-pink-500 mb-6 w-8 h-8"></i>
+                    <h3 class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Respon Rate</h3>
+                    <p id="stat-active" class="text-3xl font-black text-white">0%</p>
+                </div>
+                <div class="glass-card p-6 rounded-[2rem]">
+                    <i data-lucide="users-2" class="text-indigo-500 mb-6 w-8 h-8"></i>
+                    <h3 class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Kontributor</h3>
+                    <p id="stat-members" class="text-3xl font-black text-white">0</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+                <div class="xl:col-span-8 glass-card rounded-[2.5rem] p-6 sm:p-10">
+                    <div class="flex items-center gap-3 mb-10">
+                        <i data-lucide="award" class="text-amber-400 w-8 h-8"></i>
+                        <h3 class="text-2xl font-black text-white uppercase tracking-tight">Sirkel Awards 2026</h3>
+                    </div>
+                    <div id="nominations-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-6"></div>
+                </div>
+                <div class="xl:col-span-4 glass-card rounded-[2.5rem] p-6 sm:p-10">
+                    <div class="flex items-center gap-3 mb-10">
+                        <i data-lucide="target" class="text-rose-500 w-8 h-8"></i>
+                        <h3 class="text-2xl font-black text-white uppercase tracking-tight">Challenges</h3>
+                    </div>
+                    <div id="challenges-list" class="space-y-8"></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+                <div class="xl:col-span-5 glass-card rounded-[2.5rem] p-6 sm:p-10">
+                    <div class="flex items-center gap-3 mb-8">
+                        <i data-lucide="crown" class="text-amber-400 w-6 h-6"></i>
+                        <h2 class="text-xl font-bold text-white uppercase">The Top Chatters</h2>
+                    </div>
+                    <div id="leaderboard-list" class="space-y-4 max-h-[500px] overflow-y-auto pr-2"></div>
+                </div>
+                <div class="xl:col-span-7 glass-card rounded-[2.5rem] p-6 sm:p-10">
+                    <div class="flex items-center gap-3 mb-8">
+                        <i data-lucide="clock" class="text-blue-400 w-6 h-6"></i>
+                        <h2 class="text-xl font-bold text-white uppercase">Aktivitas 24 Jam</h2>
+                    </div>
+                    <div class="h-[400px]">
+                        <canvas id="timeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-center py-10 gap-6">
+                <button onclick="exportImage()" class="group flex items-center gap-4 bg-white text-black px-12 py-5 rounded-full font-black text-lg hover:bg-emerald-400 transition-all shadow-2xl">
+                    <i data-lucide="share-2"></i> DOWNLOAD REKAP PRO
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- HELP MODAL -->
+    <div id="help-modal" class="fixed inset-0 z-[100] hide-section flex items-center justify-center p-4">
+        <div class="glass-card bg-slate-900/90 max-w-lg w-full p-8 rounded-[2rem] border-emerald-500/30">
+            <h3 class="text-2xl font-black text-white mb-6 flex items-center gap-3">
+                <i data-lucide="help-circle" class="text-emerald-500"></i> Cara Ekspor Chat
+            </h3>
+            <div class="space-y-4 text-slate-300 text-sm font-medium">
+                <div class="flex gap-4">
+                    <span class="w-6 h-6 rounded-full bg-emerald-500 text-black flex-shrink-0 flex items-center justify-center font-bold text-xs">1</span>
+                    <p>Buka grup WhatsApp yang ingin Anda analisis.</p>
+                </div>
+                <div class="flex gap-4">
+                    <span class="w-6 h-6 rounded-full bg-emerald-500 text-black flex-shrink-0 flex items-center justify-center font-bold text-xs">2</span>
+                    <p>Klik profil grup / titik tiga di pojok kanan atas, pilih <strong>Lainnya (More)</strong>.</p>
+                </div>
+                <div class="flex gap-4">
+                    <span class="w-6 h-6 rounded-full bg-emerald-500 text-black flex-shrink-0 flex items-center justify-center font-bold text-xs">3</span>
+                    <p>Pilih <strong>Ekspor Chat (Export Chat)</strong>.</p>
+                </div>
+                <div class="flex gap-4">
+                    <span class="w-6 h-6 rounded-full bg-emerald-500 text-black flex-shrink-0 flex items-center justify-center font-bold text-xs">4</span>
+                    <p>Pilih <strong>Tanpa Media (Without Media)</strong>.</p>
+                </div>
+                <div class="flex gap-4">
+                    <span class="w-6 h-6 rounded-full bg-emerald-500 text-black flex-shrink-0 flex items-center justify-center font-bold text-xs">5</span>
+                    <p>Simpan file <code>_chat.txt</code> tersebut dan upload di sini!</p>
+                </div>
+            </div>
+            <button onclick="toggleHelp()" class="mt-8 w-full bg-white text-black py-4 rounded-2xl font-black hover:bg-emerald-500 transition-all">MENGERTI</button>
+        </div>
+    </div>
+
+    <script>
+        let fullData = [];
+        let filteredData = [];
+        let timeChartInstance = null;
+        
+        // Filter nama grup dan sistem sesuai request
+        const SYSTEM_ENTITIES = ["Staycation 2026", "Staycation 2026☀️🏕️🏖️", "Meta AI"];
+        
+        // Extended stopwords untuk topic modeling yang lebih bersih
+        const STOPWORDS = new Set([
+            'yang', 'untuk', 'dengan', 'dalam', 'adalah', 'pada', 'juga', 'dari', 'akan', 'atau', 'saya', 'kami', 'kamu', 'anda', 'mereka', 'kalo', 'kalau', 'bisa', 'sudah', 'tadi', 'ke', 'ini', 'itu', 'ada', 'lagi', 'buat', 'aja', 'saja', 'tapi', 'gak', 'nggak', 'udah', 'kok', 'sih', 'dong', 'biar', 'jadi', 'mau', 'nih', 'deh', 'lagi', 'pas', 'si', 'di', 'ga', 'ya', 'kan', 'lah', 'loh', 'gua', 'gw', 'aku', 'dan', 'telah', 'setelah', 'sebelum', 'saat', 'ketika', 'kita', 'karena', 'bukan', 'mana', 'jika', 'oleh', 'namun', 'ingin', 'tahu', 'sama', 'gitu', 'kayak', 'banget', 'bang', 'kak', 'kakak', 'mas', 'mbak'
+        ]);
+
+        lucide.createIcons();
+
+        const fileHero = document.getElementById('file-input-hero');
+        const fileNav = document.getElementById('file-input-nav');
+        const rangeStart = document.getElementById('range-start');
+        const rangeEnd = document.getElementById('range-end');
+        const sliderHighlight = document.getElementById('slider-highlight');
+
+        fileHero.addEventListener('change', handleFile);
+        fileNav.addEventListener('change', handleFile);
+
+        rangeStart.addEventListener('input', () => {
+            if(parseInt(rangeStart.value) >= parseInt(rangeEnd.value)) {
+                rangeStart.value = parseInt(rangeEnd.value) - 1;
+            }
+            updateSliderUI();
+        });
+
+        rangeEnd.addEventListener('input', () => {
+            if(parseInt(rangeEnd.value) <= parseInt(rangeStart.value)) {
+                rangeEnd.value = parseInt(rangeStart.value) + 1;
+            }
+            updateSliderUI();
+        });
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => parseText(event.target.result);
+            reader.readAsText(file);
+        }
+
+        function toggleHelp() {
+            document.getElementById('help-modal').classList.toggle('hide-section');
+        }
+
+        function parseText(text) {
+            const lines = text.split('\n');
+            const processed = [];
+            // Regex mendukung format [DD/MM/YY, HH.MM.SS] Nama: Pesan
+            const regex = /^\[(\d{1,2})\/(\d{1,2})\/(\d{2,4}),\s+(\d{1,2})[\.:](\d{2})(?:[\.:](\d{2}))?\]\s+([^:]+):\s+(.*)/;
+
+            lines.forEach(line => {
+                const match = line.match(regex);
+                if (match) {
+                    const [_, day, month, year, hour, min, sec, name, message] = match;
+                    const cleanName = name.trim();
+                    
+                    // Filter: Hapus Staycation 2026, Meta AI, dan pesan sistem enkripsi
+                    if (SYSTEM_ENTITIES.includes(cleanName) || message.includes("Messages and calls are end-to-end encrypted")) return;
+
+                    const fullYear = year.length === 2 ? `20${year}` : year;
+                    processed.push({
+                        date: new Date(`${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour}:${min}:00`),
+                        displayDate: `${day}/${month}/${fullYear}`,
+                        hour: parseInt(hour),
+                        name: cleanName,
+                        message: message.trim()
+                    });
+                } else if (processed.length > 0) {
+                    processed[processed.length - 1].message += ` ${line.trim()}`;
+                }
+            });
+
+            if (processed.length > 0) {
+                fullData = processed.sort((a,b) => a.date - b.date);
+                showDashboard();
+                initSlider();
+                populateMemberFilter();
+                updateSliderUI();
+            }
+        }
+
+        function initSlider() {
+            rangeStart.min = 0;
+            rangeStart.max = fullData.length - 1;
+            rangeStart.value = 0;
+            rangeEnd.min = 0;
+            rangeEnd.max = fullData.length - 1;
+            rangeEnd.value = fullData.length - 1;
+        }
+
+        function updateSliderUI() {
+            const startVal = parseInt(rangeStart.value);
+            const endVal = parseInt(rangeEnd.value);
+            
+            const startPercent = (startVal / (fullData.length - 1)) * 100;
+            const endPercent = (endVal / (fullData.length - 1)) * 100;
+
+            sliderHighlight.style.left = startPercent + "%";
+            sliderHighlight.style.width = (endPercent - startPercent) + "%";
+
+            document.getElementById('slider-start-label').innerText = fullData[startVal].displayDate;
+            document.getElementById('slider-end-label').innerText = fullData[endVal].displayDate;
+            document.getElementById('date-range-info').innerText = `${fullData[startVal].displayDate} — ${fullData[endVal].displayDate}`;
+
+            applyFilter();
+        }
+
+        function applyFilter() {
+            const startIdx = parseInt(rangeStart.value);
+            const endIdx = parseInt(rangeEnd.value);
+            filteredData = fullData.slice(startIdx, endIdx + 1);
+            
+            const memberFilter = document.getElementById('member-filter').value;
+            runAnalysis(memberFilter);
+        }
+
+        function runAnalysis(memberFilter) {
+            const data = memberFilter === 'all' ? filteredData : filteredData.filter(d => d.name === memberFilter);
+            
+            const stats = {};
+            const hourlyData = Array(24).fill(0);
+            const wordFreq = {};
+            let laughCount = 0;
+            const metrics = {};
+
+            data.forEach(d => {
+                stats[d.name] = (stats[d.name] || 0) + 1;
+                hourlyData[d.hour]++;
+                
+                // Topic Modeling logic
+                const words = d.message.toLowerCase().split(/[^\w]+/);
+                words.forEach(w => {
+                    if (w.length > 3 && !STOPWORDS.has(w)) {
+                        wordFreq[w] = (wordFreq[w] || 0) + 1;
+                    }
+                });
+
+                if (!metrics[d.name]) metrics[d.name] = { laugh: 0, night: 0, long: 0, count: 0 };
+                metrics[d.name].count++;
+                if (/(wkwk|haha|😂|🤣|ngakak)/i.test(d.message)) {
+                    laughCount++;
+                    metrics[d.name].laugh++;
+                }
+                if (d.hour >= 0 && d.hour <= 4) metrics[d.name].night++;
+                if (d.message.length > 150) metrics[d.name].long++;
+            });
+
+            document.getElementById('stat-total-chat').innerText = data.length.toLocaleString();
+            document.getElementById('stat-words').innerText = Object.keys(wordFreq).length.toLocaleString();
+            document.getElementById('stat-active').innerText = Math.floor((data.length / Math.max(1, fullData.length)) * 100) + "%";
+            document.getElementById('stat-members').innerText = Object.keys(stats).length;
+
+            renderCharts(hourlyData);
+            renderLeaderboard(Object.entries(stats).sort((a,b) => b[1] - a[1]));
+            renderAwards(metrics, stats);
+            renderChallenges(laughCount, data);
+            renderDeepAI(data, laughCount, wordFreq);
+        }
+
+        function renderDeepAI(data, laugh, wordFreq) {
+            const aiVibe = document.getElementById('ai-vibe');
+            const aiVibeDesc = document.getElementById('ai-vibe-desc');
+            const aiTopicCloud = document.getElementById('ai-topic-cloud');
+            const aiHealth = document.getElementById('ai-health');
+            const aiHealthBar = document.getElementById('ai-health-bar');
+            const aiSummary = document.getElementById('ai-summary');
+
+            const laughRatio = laugh / (data.length || 1);
+            if (laughRatio > 0.20) {
+                aiVibe.innerText = "Comedy Central";
+                aiVibeDesc.innerText = "Grup ini didominasi jokes dan humor receh.";
+            } else if (laughRatio > 0.08) {
+                aiVibe.innerText = "Balanced Circle";
+                aiVibeDesc.innerText = "Campuran antara obrolan serius dan santai.";
+            } else {
+                aiVibe.innerText = "Intellectual Hub";
+                aiVibeDesc.innerText = "Fokus pada diskusi intens atau berbagi info.";
+            }
+
+            // Top 5 Topics dengan progress bar
+            const topTopics = Object.entries(wordFreq).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            const maxTopicCount = topTopics[0]?.[1] || 1;
+            
+            aiTopicCloud.innerHTML = topTopics.map(([word, count]) => `
+                <div class="space-y-1">
+                    <div class="flex justify-between text-[10px] font-bold uppercase tracking-tighter">
+                        <span class="text-blue-400">#${word}</span>
+                        <span class="text-slate-500">${count}x</span>
+                    </div>
+                    <div class="h-1 bg-slate-800 rounded-full overflow-hidden">
+                        <div class="h-full bg-blue-500 rounded-full" style="width: ${(count/maxTopicCount)*100}%"></div>
+                    </div>
+                </div>
+            `).join('') || '<p class="text-slate-500 text-[10px]">No topics detected</p>';
+
+            const health = Math.min(100, Math.floor((data.length / (filteredData.length || 1)) * 100));
+            aiHealth.innerText = health > 70 ? "Vibrant" : health > 40 ? "Stable" : "Hibernating";
+            aiHealthBar.style.width = health + "%";
+            aiHealthBar.className = `h-full transition-all duration-1000 ${health > 70 ? 'bg-emerald-500' : health > 40 ? 'bg-blue-500' : 'bg-rose-500'}`;
+
+            const nightOwlCount = data.filter(d => d.hour >= 0 && d.hour <= 4).length;
+            const summary = nightOwlCount > data.length * 0.25 
+                ? "Sirkel ini aktif saat dunia tertidur. Banyak obrolan terjadi di jam kalong."
+                : "Aktivitas grup sangat teratur mengikuti jam kerja/kuliah manusia normal.";
+            aiSummary.innerText = `"${summary}"`;
+        }
+
+        // Fungsi Awards, Challenges, Leaderboard, Charts dipertahankan dengan logika data yang bersih
+        function renderAwards(metrics, stats) {
+            const grid = document.getElementById('nominations-grid');
+            const sorted = Object.entries(stats).sort((a,b) => b[1] - a[1]);
+            const mEntries = Object.entries(metrics);
+
+            const awards = [
+                { title: "Si Paling Lawak", icon: "smile", win: mEntries.sort((a,b) => b[1].laugh - a[1].laugh)[0]?.[0] || "-", d: "Penyuplai tawa terbanyak." },
+                { title: "The Batman", icon: "moon", win: mEntries.sort((a,b) => b[1].night - a[1].night)[0]?.[0] || "-", d: "Penjaga sirkel jam kalong." },
+                { title: "Si Paling Berisik", icon: "megaphone", win: sorted[0]?.[0] || "-", d: "Juara bertahan chat terbanyak." },
+                { title: "The Philosopher", icon: "book-open", win: mEntries.sort((a,b) => b[1].long - a[1].long)[0]?.[0] || "-", d: "Hobi ngetik essay panjang." }
+            ];
+
+            grid.innerHTML = awards.map(a => `
+                <div class="bg-white/5 border border-white/5 p-6 rounded-3xl hover:bg-white/10 transition-all">
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 bg-slate-800 rounded-2xl text-emerald-500">
+                            <i data-lucide="${a.icon}"></i>
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">${a.title}</p>
+                            <h4 class="text-white font-extrabold text-lg truncate">${a.win}</h4>
+                            <p class="text-slate-500 text-xs mt-1">${a.d}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function renderChallenges(laugh, data) {
+            const list = document.getElementById('challenges-list');
+            const items = [
+                { name: "Pecahkan Rekor Ngakak", cur: laugh, tar: 250 },
+                { name: "Sirkel Kalong", cur: data.filter(d => d.hour < 4).length, tar: 50 },
+                { name: "Chat Milestone", cur: data.length, tar: 1000 }
+            ];
+            list.innerHTML = items.map(i => {
+                const prog = Math.min(100, (i.cur / i.tar) * 100);
+                return `
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-end">
+                            <span class="text-xs font-bold text-white uppercase tracking-tight">${i.name}</span>
+                            <span class="text-[10px] font-black text-emerald-500">${Math.floor(prog)}%</span>
+                        </div>
+                        <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-emerald-500 rounded-full transition-all duration-700" style="width: ${prog}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderLeaderboard(data) {
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = data.slice(0, 10).map(([name, count], idx) => {
+                const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6'];
+                return `
+                    <div class="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-white" style="background: ${colors[idx % colors.length]}">
+                                ${name.charAt(0)}
+                            </div>
+                            <div>
+                                <p class="font-bold text-white text-sm truncate max-w-[120px]">${name}</p>
+                                <p class="text-[8px] text-slate-500 font-black uppercase tracking-widest">Rank #${idx + 1}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-lg font-black text-white">${count.toLocaleString()}</p>
+                            <p class="text-[8px] text-emerald-500 font-bold uppercase">Chat</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderCharts(data) {
+            const ctx = document.getElementById('timeChart').getContext('2d');
+            if (timeChartInstance) timeChartInstance.destroy();
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
+            gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
+            timeChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    datasets: [{
+                        data: data,
+                        borderColor: '#10b981',
+                        borderWidth: 3,
+                        fill: true,
+                        backgroundColor: gradient,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: false },
+                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function populateMemberFilter() {
+            const select = document.getElementById('member-filter');
+            const names = [...new Set(fullData.map(d => d.name))].sort();
+            select.innerHTML = '<option value="all">Semua Anggota</option>';
+            names.forEach(n => select.innerHTML += `<option value="${n}">${n}</option>`);
+            select.onchange = applyFilter;
+        }
+
+        function showDashboard() {
+            document.getElementById('upload-section').classList.add('hide-section');
+            document.getElementById('dashboard-section').classList.remove('hide-section');
+            document.getElementById('nav-actions').classList.remove('hidden');
+        }
+
+        function exportImage() {
+            const area = document.getElementById('capture-area');
+            html2canvas(area, { backgroundColor: '#050505', scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'SirkelScope-Analytics-Pro.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+    </script>
+</body>
+</html>
